@@ -43,6 +43,10 @@ class Book:
         return self.__isbn
 
     @property
+    def is_borrowed(self) -> bool:
+        return self.__is_borrowed
+
+    @property
     def is_borrowed_by(self) -> bool:
         return self.__borrowed_by
 
@@ -74,11 +78,13 @@ class Book:
 
 class Reader:
     """Класс представляющий читателя"""
+    count = 0
     MAX_BOOKS = 3
     def __init__(self, name: str, card_number:str):
         self.__name = name
         self.__card_number = card_number
         self.__borrowed_books: List[Book] = []
+        Reader.count += 1
 
     @property
     def name(self) -> str:
@@ -108,6 +114,7 @@ class Reader:
     def return_book(self, book: Book) -> None:
         """Вернуть книгу"""
         if book in self.__borrowed_books:
+            book.return_book()
             self.__borrowed_books.remove(book)
 
     def __str__(self):
@@ -139,13 +146,149 @@ class Library:
         """Удаление книги из библиотеки"""
         if isbn not in self.__books:
             raise BookNotFoundException(f'Книга с ISBN: {isbn} не найдена')
+        book = self.__books[isbn]
+
+        if book.is_borrowed:
+            raise BookAlreadyBorrowedException(
+                f'Книга "{book.title}" выдана, удаление не возможно!'
+            )
+        del self.__books[isbn]
+
+    def register_reader(self, reader: Reader) -> None:
+        """Регистрация нового читателя."""
+        if not isinstance(reader, Reader):
+            raise TypeError('Читатель должен быть '
+                            'представлен классом "Reader"')
+        self.__readers[reader.card_number] = reader
+
+    def unregister_reader(self, card_number: str) -> None:
+        """Удаление читателя из библиотеки"""
+        if card_number not in self.__readers:
+            raise ReaderNotFoundException('Читатель с номером'
+                                            f'{card_number} не найден.')
+        reader = self.__readers[card_number]
+        if reader.borrowed_count > 0:
+            raise Exception('нельзя удалить читателя, он не сдал книги')
+        del self.__readers[card_number]
+
+    def borrow_book(self, card_number: str, isbn: str) -> None:
+        """Выдать книгу читателю."""
+        if isbn not in self.__books:
+            raise BookNotFoundException(f'Книга с ISBN: {isbn} не найдена')
+
+        book = self.__books[isbn]
+        if book.is_borrowed:
+            raise BookAlreadyBorrowedException('Книга выдана')
+
+        if card_number not in self.__readers:
+            raise ReaderNotFoundException('Читатель с номером'
+                                            f'{card_number} не найден.')
+        reader = self.__readers[card_number]
+        reader.borrow_book(book)
+        print(f'Книга {book.title} выдана {reader.name}')
+
+    def return_book(self, card_number: str, isbn: str) -> None:
+        """Вернуть книгу в библиотеку."""
+        if isbn not in self.__books:
+            raise BookNotFoundException(f'Книга с ISBN: {isbn} не найдена')
+
+        book = self.__books[isbn]
+
+
+        if card_number not in self.__readers:
+            raise ReaderNotFoundException('Читатель с номером'
+                                          f'{card_number} не найден.')
+        reader = self.__readers[card_number]
+        reader.return_book(book)
+        print(f'Книга {book.title} возвращена читателем {reader.name}')
+
+    def get_available_books(self) -> List[Book]:
+        """Список доступных книг."""
+        return [book for book in self.__books.values() if not book.is_borrowed]
+
+    def get_debtors(self) -> List[Reader]:
+        debtors = []
+        now = datetime.now()
+        for reader in self.__readers.values():
+            overdue_books =[
+                book for book in reader.borrowed_books
+                if book.due_date < now
+            ]
+            if overdue_books:
+                debtors.append(reader)
+        return debtors
+
+    def __str__(self) -> str:
+        total_books = len(self.__books)
+        available_books = len(self.get_available_books())
+        # total_readers = len(self.__readers)
+        total_readers = Reader.count
+        return (f'Библиотека: {self.__name}\n'
+                f'Всего книг: {total_books}\n'
+                f'Доступно: {available_books}\n'
+                f'Кол-во читателей: {total_readers}\n')
+
+
+if __name__ == '__main__':
+    # Создаем библиотеку
+    library = Library('Городская библиотека')
+    # Создаем книги
+    book1 = Book('Война и мир', 'Лев Толстой', 'isbn-01-922', 1869)
+    book2 = Book('Преступление и наказание', 'Фёдр Достоевский', 'isbn-01-923', 1866)
+    book3 = Book('Мастер и Маргарита', "Михаил Булгаков", 'isbn-01-924', 1967)
+    book4 = Book('Анна Каренина', 'Лев Толстой',  'isbn-01-925', 1877)
+    # Добавление книг в библиотеку
+    library.add_book(book1)
+    library.add_book(book2)
+    library.add_book(book3)
+    library.add_book(book4)
+
+    # регистрация читателя
+    reader1 = Reader('Иван Иванов', 'LIB-001')
+    reader2 = Reader('Петр Петров', 'LIB-005')
+    # добавляем читателей в библиотеку
+    library.register_reader(reader1)
+    library.register_reader(reader2)
+
+    try:
+        library.borrow_book('LIB-001', 'isbn-01-922')
+        library.borrow_book('LIB-001', 'isbn-01-924')
+        library.borrow_book('LIB-005', 'isbn-01-925')
+
+    except BookAlreadyBorrowedException as err:
+        print(f'Ошибка:', err)
+    except ReaderLimitExceededException as err:
+        print(f'Ошибка:', err)
+    except ReaderNotFoundException as err:
+        print(f'Ошибка:', err)
+    except BookNotFoundException as err:
+        print(f'Ошибка:', err)
+
+    # Покажем доступные книги
+    print(f'Доступные книги: ')
+    for book in library.get_available_books():
+        print(f' {book}')
+
+    # Возвращаем книгу
+    # library.return_book('LIB-001', 'isbn-01-922')
+
+    print(f'Доступные книги: ')
+    for book in library.get_available_books():
+        print(f' {book}')
+
+    # Информация про библиотеку
+    print(f'\n{library}')
+
+    # Покажем информацию о читателе
+    print(f'\n{reader1}')
+    print(f'Книги "на рукаx": ')
+    for book in reader1.borrowed_books:
+     print(f'{book}')
 
 
 
 
 
-book1 = Book('Война и мир 1', 'Лев Толстой', 'isbn-01-922', 1869)
-book2 = Book('Война и мир 2', 'Лев Толстой', 'isbn-01-923', 1869)
-print(book1)
-books = [book1, book2]
-print(books)
+
+
+
