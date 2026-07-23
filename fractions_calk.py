@@ -2,6 +2,30 @@ from tkinter import *
 import math
 
 
+def add(n1, d1, n2, d2):
+    n = n1 * d2 + n2 * d1
+    d = d1 * d2
+    return n, d
+
+
+def sub(n1, d1, n2, d2):
+    n = n1 * d2 - n2 * d1
+    d = d1 * d2
+    return n, d
+
+
+def mult(n1, d1, n2, d2):
+    n = n1 * n2
+    d = d1 * d2
+    return n, d
+
+
+def div(n1, d1, n2, d2):
+    n = n1 * d2
+    d = d1 * n2
+    return n, d
+
+
 def get_items():
     try:
         n1 = int(num1.get())
@@ -14,17 +38,13 @@ def get_items():
 
     match znak:
         case '+':
-            n = n1 * d2 + n2 * d1
-            d = d1 * d2
+            n, d = add(n1, d1, n2, d2)
         case '-':
-            n = n1 * d2 - n2 * d1
-            d = d1 * d2
+            n, d = sub(n1, d1, n2, d2)
         case '*':
-            n = n1 * n2
-            d = d1 * d2
+            n, d = mult(n1, d1, n2, d2)
         case '/':
-            n = n1 * d2
-            d = d1 * n2
+            n, d = div(n1, d1, n2, d2)
 
     nod = math.gcd(n, d)
     n = n // nod
