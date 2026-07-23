@@ -26,11 +26,16 @@ def show_image():
             response.raise_for_status()
             img_data = BytesIO(response.content)
             img = Image.open(img_data)
-            size = spinbox()
+            size = (int(width_spinbox.get()), int(height_spinbox.get()))
             img.thumbnail(size)
             img = ImageTk.PhotoImage(img)
+
+            new_window = Toplevel()
+            new_window.title('Новое окно')
+            label = ttk.Label(new_window, image=img)
             label.config(image = img)
             label.image = img
+            label.pack(padx=10, pady=10)
 
         except requests.RequestException as err:
             messagebox.showerror('Ошибка',f'Не удалось загрузить изображение {err}')
@@ -42,11 +47,11 @@ def prog():
     root.after(3000, show_image)
 
 
-def spinbox():
-    width = int(width_spinbox.get())
-    height = int(height_spinbox.get())
-    coord = width, height
-    return coord
+# def spinbox():
+#     width = int(width_spinbox.get())
+#     height = int(height_spinbox.get())
+#     coord = width, height
+#     return coord
 
 root = Tk()
 root.title("Собачки")
