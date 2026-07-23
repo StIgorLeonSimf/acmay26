@@ -10,6 +10,8 @@ def validator(event):
     if entry_text != correct_text:
         event.widget.delete(0, 'end')
         event.widget.insert(0, correct_text)
+    if int(entry_text) == 0:
+        event.widget.delete(0, 'end')
 
 
 def validator_oper(event):
