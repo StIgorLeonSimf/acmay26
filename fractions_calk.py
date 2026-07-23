@@ -2,6 +2,26 @@ from tkinter import *
 import math
 
 
+def validator(event):
+    # print(event.char)
+    entry_text = event.widget.get().strip()
+    correct_text = ''.join([t for t in entry_text if t in '0123456789'])
+    # print(entry_text, correct_text)
+    if entry_text != correct_text:
+        event.widget.delete(0, 'end')
+        event.widget.insert(0, correct_text)
+
+
+def validator_oper(event):
+    # print(event.char)
+    entry_text = oper.get().strip()
+    correct_text = ''.join([t for t in entry_text if t in '+-*/'])
+    # print(entry_text, correct_text)
+    if entry_text != correct_text:
+        event.widget.delete(0, 'end')
+        event.widget.insert(0, correct_text)
+
+
 def add(n1, d1, n2, d2):
     n = n1 * d2 + n2 * d1
     d = d1 * d2
@@ -59,6 +79,10 @@ def get_items():
         int_p = 1
         n = ''
         d = ''
+    elif n == 0 and int_p == '':
+        int_p = 0
+        n = ''
+        d = ''
 
     int_part['text'] = str(int_p)
     num3['text'] = str(n)
@@ -67,7 +91,7 @@ def get_items():
 
 root = Tk()
 root.title('Fractions calculator')
-root.geometry('300x150+800+50')
+root.geometry('300x150+800+200')
 
 frame = Frame(root)
 frame.pack(pady=10)  # в root теперь можно использовать только pack
@@ -102,5 +126,11 @@ line3 = Label(frame, text=chr(9135) * 5)
 line3.grid(row=1, column=5)
 den3 = Label(frame, width=2, font=('Arial', 15), justify='center', bg='lightgray')
 den3.grid(row=2, column=5)
+
+num1.bind('<KeyRelease>', validator)
+num2.bind('<KeyRelease>', validator)
+den1.bind('<KeyRelease>', validator)
+den2.bind('<KeyRelease>', validator)
+oper.bind('<KeyRelease>', validator_oper)
 
 root.mainloop()
