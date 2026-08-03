@@ -92,19 +92,19 @@ class LinkedList:
             if cnt == ind:
                 previous_box.next_box = current_box.next_box
                 break
-            previous_box = current_box
-            current_box = current_box.next_box
-            cnt += 1
-        else:
-            previous_box.next_box = None
+            if current_box.next_box:
+                previous_box = current_box
+                current_box = current_box.next_box
+                cnt += 1
+            else:
+
+                previous_box.next_box = None
+                break
+
         self.len -= 1
 
-        if current_box:
-            current_box.next_box = None
-            return current_box
-        else:
-
-            return previous_box
+        current_box.next_box = None
+        return current_box
 
     def __len__(self):
         return self.len
@@ -122,8 +122,9 @@ print(ll)
 print(ll.in_('Alisa1'))
 # print(ll.get())
 # ll.remove('Alisa1')
-print(ll.index('Alisa'))
-print(len(ll))
+# print(ll.index('Alisa'))
+# print(len(ll))
 print(ll.pop())
 print(len(ll))
+print(ll)
 
